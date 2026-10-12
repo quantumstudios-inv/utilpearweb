@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>utilpearweb - Tools</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#0f0f0f] text-white min-h-screen">
+<div class="flex justify-between p-6 border-b border-zinc-800">
+  <div class="font-black">🍐 utilpearweb</div>
+  <div class="flex gap-3 items-center"><span id="userEmail" class="text-sm text-zinc-400"></span><span id="proBadge" class="px-3 py-1 rounded-full text-xs bg-[#a7f3d0] text-black font-bold hidden">PRO</span><button onclick="localStorage.clear();location.href='/auth.html'" class="text-xs text-zinc-500">Salir</button></div>
+</div>
+
+<div class="max-w-5xl mx-auto p-6 grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+  <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-5"><h3 class="font-bold">JSON Formatter</h3><p class="text-sm text-zinc-500">Gratis</p><button onclick="useTool('json')" class="mt-4 w-full py-2 bg-white text-black rounded-xl font-bold">Abrir</button></div>
+  <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-5"><h3 class="font-bold">File Compressor</h3><p class="text-sm text-zinc-500">Gratis hasta 25MB • PRO ilimitado</p><button onclick="useTool('compress')" class="mt-4 w-full py-2 bg-white text-black rounded-xl font-bold">Abrir</button></div>
+  <div class="bg-[#181818] border border-[#a7f3d0]/30 rounded-2xl p-5"><h3 class="font-bold">Batch Convert PRO 🔒</h3><p class="text-sm text-zinc-500">Solo PRO</p><button onclick="useTool('batch')" class="mt-4 w-full py-2 bg-[#a7f3d0] text-black rounded-xl font-bold">Desbloquear PRO</button></div>
+</div>
+
+<div id="paywall" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center p-6"><div class="bg-zinc-900 p-8 rounded-2xl max-w-sm text-center border border-zinc-800"><h2 class="text-2xl font-bold">Función PRO</h2><p class="text-zinc-400 mt-2">Esta herramienta es solo para usuarios PRO. Tu correo no está en pro-users.json</p><button onclick="document.getElementById('paywall').classList.add('hidden')" class="mt-6 w-full py-2 bg-white text-black rounded-xl">Cerrar</button><a href="/#pricing" class="block mt-3 text-sm text-[#a7f3d0]">Comprar PRO $12/mes</a></div></div>
+
+<script>
+const email = localStorage.getItem("utilpear_email");
+const isPro = localStorage.getItem("utilpear_isPro")==="1";
+if(!email){ location.href="/auth.html"; }
+document.getElementById('userEmail').textContent=email;
+if(isPro) document.getElementById('proBadge').classList.remove('hidden');
+
+function useTool(name){
+  if(name==='batch' &&!isPro){ document.getElementById('paywall').classList.remove('hidden'); return; }
+  alert("Abriendo herramienta: "+name+" - aquí conectas tu lógica real");
+}
+</script>
+</body>
+</html>
