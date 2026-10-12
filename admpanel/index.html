@@ -28,7 +28,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e)=>{
   try{
     const r=await fetch('/.netlify/functions/admin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});
     const d=await r.json();
-    if(d.ok){msg.style.color='#4ade80';msg.textContent='¡Entraste!';localStorage.setItem('zero_admin','1');setTimeout(()=>location.href='/',800);}
+    if(d.ok){msg.style.color='#4ade80';msg.textContent='¡Entraste!';localStorage.setItem('zero_admin','1');setTimeout(()=>location.href='/admpanel/dashboard.html',800);}
     else{msg.textContent=d.error||'Credenciales incorrectas';btn.textContent='Entrar';btn.disabled=false;}
   }catch(err){msg.textContent='Error: '+err.message;btn.textContent='Entrar';btn.disabled=false;}
 });
