@@ -1,5 +1,7 @@
-exports.handler = async (event) => {
-  if (event.httpMethod!== 'POST') {
+import { createHash } from 'crypto';
+
+export const handler = async (event) => {
+  if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
   try {
@@ -7,12 +9,11 @@ exports.handler = async (event) => {
     const adminEmail = process.env.ADMIN_EMAIL;
     const adminHash = process.env.ADMIN_PASSWORD_HASH;
 
-    if (!adminEmail ||!adminHash) {
+    if (!adminEmail || !adminHash) {
       return { statusCode: 500, body: JSON.stringify({ ok: false, error: 'Faltan variables en Netlify' }) };
     }
 
-    const crypto = require('crypto');
-    const hash = crypto.createHash('sha256').update(password).digest('hex');
+    const hash = createHash('sha256').update(password).digest('hex');
 
     if (email === adminEmail && hash === adminHash) {
       return { statusCode: 200, body: JSON.stringify({ ok: true }) };
