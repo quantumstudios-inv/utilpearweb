@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>utilpearweb - Auth</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>body{background:#0f0f0f}</style>
+</head>
+<body class="text-white min-h-screen flex">
+  <!-- Left -->
+  <div class="hidden lg:flex w-1/2 p-12 flex-col justify-between bg-[#111]">
+    <div><div class="text-3xl font-black">🍐 utilpearweb</div></div>
+    <div>
+      <h1 class="text-5xl font-black leading-tight">Build faster with<br>data that just works</h1>
+      <p class="text-zinc-400 mt-4 max-w-md">The all-in-one platform for compressing, converting and cleaning files. Private, fast, pear-shaped.</p>
+      <div class="mt-10 space-y-6">
+        <div class="flex gap-4"><div class="w-12 h-12 bg-[#a7f3d0]/20 rounded-xl flex items-center justify-center">⚡</div><div><b>Fast Tools</b><p class="text-sm text-zinc-500">No upload limits for PRO</p></div></div>
+        <div class="flex gap-4"><div class="w-12 h-12 bg-[#a7f3d0]/20 rounded-xl flex items-center justify-center">🔒</div><div><b>Private by default</b><p class="text-sm text-zinc-500">Files never leave your browser</p></div></div>
+      </div>
+    </div>
+    <div class="text-xs text-zinc-600">v2.4 • utilpearweb</div>
+  </div>
+
+  <!-- Right -->
+  <div class="w-full lg:w-1/2 flex items-center justify-center p-6">
+    <div class="w-full max-w-md bg-[#181818] border border-zinc-800 rounded-2xl p-8">
+      <div class="flex bg-zinc-800 rounded-full p-1 mb-8">
+        <button id="tabLogin" class="flex-1 py-2 rounded-full bg-[#a7f3d0] text-black font-bold">Login</button>
+        <button id="tabReg" class="flex-1 py-2 rounded-full text-zinc-400">Register</button>
+      </div>
+
+      <h2 id="title" class="text-3xl font-bold">Welcome back</h2>
+      <p id="subtitle" class="text-zinc-400 mt-1 mb-6">Please enter your details to sign in.</p>
+
+      <input id="email" type="email" placeholder="you@company.com" class="w-full p-3 rounded-xl bg-zinc-900 border border-zinc-700 mb-3">
+      <input id="pass" type="password" placeholder="Password" class="w-full p-3 rounded-xl bg-zinc-900 border border-zinc-700 mb-3">
+      <input id="pass2" type="password" placeholder="Confirm password" class="w-full p-3 rounded-xl bg-zinc-900 border border-zinc-700 mb-4 hidden">
+
+      <button id="actionBtn" class="w-full py-3 rounded-xl bg-[#a7f3d0] text-black font-bold">Sign In</button>
+      <p id="msg" class="text-center text-sm mt-4 text-[#a7f3d0]"></p>
+    </div>
+  </div>
+
+<script>
+const PRO_URL = "https://raw.githubusercontent.com/quantumstudios-inv/utilpearweb/main/data/pro-users.json";
+const USERS_KEY = "utilpear_users"; // registro local por ahora
+
+let mode = "login";
+const tabLogin = document.getElementById('tabLogin'), tabReg = document.getElementById('tabReg');
+const title = document.getElementById('title'), subtitle = document.getElementById('subtitle'), pass2 = document.getElementById('pass2'), btn = document.getElementById('actionBtn'), msg = document.getElementById('msg');
+
+tabLogin.onclick = () => { mode="login"; tabLogin.className="flex-1 py-2 rounded-full bg-[#a7f3d0] text-black font-bold"; tabReg.className="flex-1 py-2 rounded-full text-zinc-400"; title.textContent="Welcome back"; subtitle.textContent="Please enter your details to sign in."; pass2.classList.add('hidden'); btn.textContent="Sign In"; }
+tabReg.onclick = () => { mode="register"; tabReg.className="flex-1 py-2 rounded-full bg-[#a7f3d0] text-black font-bold"; tabLogin.className="flex-1 py-2 rounded-full text-zinc-400"; title.textContent="Create account"; subtitle.textContent="Start using tools in 30 seconds."; pass2.classList.remove('hidden'); btn.textContent="Create account"; }
+
+function getUsers(){ try{ return JSON.parse(localStorage.getItem(USERS_KEY)||"{}") }catch{ return {} } }
+function saveUsers(u){ localStorage.setItem(USERS_KEY, JSON.stringify(u)) }
+
+async function checkPro(email){
+  try{ const r=await fetch(PRO_URL+"?t="+Date.now()); const list=await r.json(); return list.map(x=>x.toLowerCase()).includes(email.toLowerCase()); }catch{ return false; }
+}
+
+btn.onclick = async () => {
+  const email = document.getElementById('email').value.trim().toLowerCase();
+  const p1 = document.getElementById('pass').value;
+  const p2 = document.getElementById('pass2').value;
+  if(!email||!p1){ msg.textContent="Completa los campos"; return; }
+  const users = getUsers();
+
+  if(mode==="register"){
+    if(p1!==p2){ msg.textContent="Passwords no coinciden"; return; }
+    if(users[email]){ msg.textContent="Ya existe, haz login"; return; }
+    users[email]=btoa(p1); saveUsers(users);
+    msg.textContent="✅ Cuenta creada, entrando...";
+  } else {
+    if(!users[email] || users[email]!==btoa(p1)){ msg.textContent="Correo o password incorrecto"; return; }
+  }
+
+  msg.textContent="Verificando PRO...";
+  const isPro = await checkPro(email);
+  localStorage.setItem("utilpear_email", email);
+  localStorage.setItem("utilpear_isPro", isPro?"1":"0");
+  location.href = "/tools.html";
+};
+</script>
+</body>
+  </html>
