@@ -1,12 +1,2 @@
 [build]
   functions = "netlify/functions"
-
-[[redirects]]
-  from = "/admpanel"
-  to = "/.netlify/functions/admin"
-  status = 200
-
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
