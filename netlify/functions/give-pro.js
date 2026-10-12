@@ -1,36 +1,50 @@
-import fs from 'fs/promises';
-import path from 'path';
-
-const filePath = path.join(process.cwd(), 'data', 'pro-users.json');
-
-async function getList(){
-  try{
-    const data = await fs.readFile(filePath, 'utf8');
-    return JSON.parse(data);
-  }catch{ return []; }
-}
-
-export const handler = async (event) => {
-  if (event.httpMethod!== 'POST') return { statusCode: 405, body: 'Method Not Allowed' };
-  try{
-    const { email, action } = JSON.parse(event.body || '{}');
-    if(!email) return { statusCode: 400, body: JSON.stringify({ ok: false, error: 'Falta email' }) };
-
-    let list = await getList();
-    const clean = email.toLowerCase().trim();
-
-    if(action === 'remove'){
-      list = list.filter(e => e!== clean);
-    }else{
-      if(!list.includes(clean)) list.push(clean);
-    }
-
-    // En Netlify el archivo se guarda temporalmente, pero te muestro el contenido
-    // Para hacerlo permanente necesitamos guardarlo en GitHub, por eso te doy el paso 3
-    try{ await fs.writeFile(filePath, JSON.stringify(list, null, 2)); }catch{}
-
-    return { statusCode: 200, body: JSON.stringify({ ok: true, list, note: 'Agregado en memoria. Para hacerlo permanente copia el JSON de abajo a data/pro-users.json' }) };
-  }catch(e){
-    return { statusCode: 500, body: JSON.stringify({ ok: false, error: e.message }) };
+exports.handler = async (event) => {
+  try {
+    const { email } = JSON.parse(event.body);
+    const token = process.env.GITHUB_TOKEN;
+    const repo = process.env.GITHUB_REPO; // quantumstudios-inv/utilpearweb
+    const branch = process.env.GITHUB_BRANCH || 'main';
+    
+    console.log("Repo:", repo, "Branch:", branch, "Email:", email, "Token exists:", !!token);
+    
+    if (!token) throw new Error("No GITHUB_TOKEN");
+    
+    // 1. Obtener archivo actual
+    const getRes = await fetch(`https://api.github.com/repos/${repo}/contents/data/pro-users.json?ref=${branch}`, {
+      headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github.v3+json" }
+    });
+    
+    const fileData = await getRes.json();
+    console.log("GitHub get:", getRes.status, fileData.message);
+    
+    if (!fileData.content) throw new Error("No se pudo leer pro-users.json: " + JSON.stringify(fileData));
+    
+    const content = Buffer.from(fileData.content, 'base64').toString();
+    let users = JSON.parse(content);
+    
+    if (!users.includes(email)) users.push(email);
+    
+    // 2. Guardar
+    const putRes = await fetch(`https://api.github.com/repos/${repo}/contents/data/pro-users.json`, {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github.v3+json" },
+      body: JSON.stringify({
+        message: `Add PRO ${email}`,
+        content: Buffer.from(JSON.stringify(users, null, 2)).toString('base64'),
+        sha: fileData.sha,
+        branch: branch
+      })
+    });
+    
+    const putResult = await putRes.json();
+    console.log("GitHub put:", putRes.status, putResult.message);
+    
+    if (!putRes.ok) throw new Error(JSON.stringify(putResult));
+    
+    return { statusCode: 200, body: JSON.stringify({ ok: true, users }) };
+    
+  } catch (e) {
+    console.error("ERROR give-pro:", e.message);
+    return { statusCode: 500, body: JSON.stringify({ error: e.message }) };
   }
 };
