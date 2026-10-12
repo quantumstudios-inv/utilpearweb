@@ -6,26 +6,50 @@
 <title>Dashboard - ZERO</title>
 </head>
 <body style="background:#0a0a0a;color:#fff;font-family:sans-serif;margin:0;padding:20px">
-<script>
-// si no está logueado, mándalo al login
-if(!localStorage.getItem('zero_admin')) location.href='/admpanel/';
-</script>
+<script>if(!localStorage.getItem('zero_admin')) location.href='/admpanel/';</script>
 <div style="max-width:800px;margin:0 auto">
 <div style="display:flex;justify-content:space-between;align-items:center">
 <h1>Panel Admin ZERO</h1>
 <button onclick="localStorage.removeItem('zero_admin');location.href='/admpanel/'" style="padding:8px 16px;border-radius:8px;border:0">Salir</button>
 </div>
+
 <div style="background:#141414;padding:20px;border-radius:16px;border:1px solid #222;margin-top:20px">
 <h3>Dar Pro a usuario</h3>
 <input id="userEmail" placeholder="email del usuario" style="width:100%;padding:12px;border-radius:10px;border:1px solid #333;background:#000;color:#fff;box-sizing:border-box;margin-top:10px">
 <button id="givePro" style="margin-top:12px;padding:12px 20px;border-radius:10px;border:0;font-weight:700;background:#fff;color:#000">Dar PRO</button>
-<div id="result" style="margin-top:12px;font-size:14px;color:#4ade80"></div>
+<div id="result" style="margin-top:12px;font-size:14px"></div>
 </div>
+
 <div style="background:#141414;padding:20px;border-radius:16px;border:1px solid #222;margin-top:20px">
-<h3>Estado</h3>
-<p style="color:#888;font-size:14px">Conectado como admin. Aquí vamos a conectar tu base de datos de usuarios en el siguiente paso.</p>
-<p>¿Qué base de datos usas para los usuarios? ¿Supabase, Firebase o tu propio backend?</p>
+<h3>Usuarios PRO (<span id="count">0</span>)</h3>
+<div id="list" style="margin-top:10px;color:#888;font-size:14px">Cargando...</div>
 </div>
 </div>
+
+<script>
+async function load(){
+  const r=await fetch('/.netlify/functions/list-pro');
+  const d=await r.json();
+  const el=document.getElementById('list');
+  document.getElementById('count').textContent=d.list.length;
+  if(!d.list.length) el.innerHTML='Aún no hay usuarios PRO';
+  else el.innerHTML=d.list.map(e=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #222"><span>${e}</span><button onclick="removePro('${e}')" style="background:#222;color:#fff;border:0;padding:4px 10px;border-radius:6px">Quitar</button></div>`).join('');
+}
+async function removePro(email){
+  if(!confirm('¿Quitar PRO a '+email+'?')) return;
+  await fetch('/.netlify/functions/give-pro',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,action:'remove'})});
+  load();
+}
+document.getElementById('givePro').onclick=async()=>{
+  const email=document.getElementById('userEmail').value.trim();
+  if(!email) return;
+  document.getElementById('result').textContent='Guardando...';
+  const r=await fetch('/.netlify/functions/give-pro',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
+  const d=await r.json();
+  if(d.ok){document.getElementById('result').textContent='¡'+email+' ahora es PRO!';document.getElementById('userEmail').value='';load();}
+  else document.getElementById('result').textContent='Error: '+d.error;
+};
+load();
+</script>
 </body>
 </html>
